@@ -11,6 +11,8 @@
 #'   false since base packages should always match the R version.
 #' @param dependencies Whether to include the (recursive) dependencies
 #'   as well. See the `dependencies` argument of [utils::install.packages()].
+#' @param lib_paths Library path(s). The default value `NULL` resolved to all
+#'   known library trees (see [base::.libPaths()])
 #' @return A data frame with columns:
 #'   * `package`: package name.
 #'   * `ondiskversion`: package version (on the disk, which is sometimes
@@ -44,7 +46,8 @@
 package_info <- function(
   pkgs = c("loaded", "attached", "installed")[1],
   include_base = FALSE,
-  dependencies = NA) {
+  dependencies = NA,
+  lib_paths = NULL) {
 
   if (is.null(pkgs)) pkgs <- "loaded"
   if (identical(pkgs, "!loaded") || identical(pkgs, "loaded")) {
@@ -54,13 +57,13 @@ package_info <- function(
     pkgs <- attached_packages()
 
   } else if (identical(pkgs, "!installed") || identical(pkgs, "installed")) {
-    pkgs <- installed_packages()
+    pkgs <- installed_packages(lib_paths)
 
   } else {
-    pkgs <- dependent_packages(pkgs, dependencies)
+    pkgs <- dependent_packages(pkgs, dependencies, lib_paths)
   }
 
-  desc <- lapply(pkgs$package, pkg_desc, lib.loc = .libPaths())
+  desc <- lapply(pkgs$package, pkg_desc, lib.loc = lib_paths)
 
   pkgs$is_base <- vapply(
     desc, function(x) identical(x$Priority, "base"), logical(1)
@@ -70,7 +73,7 @@ package_info <- function(
   pkgs$source <- vapply(desc, pkg_source, character(1))
   pkgs$md5ok <- vapply(desc, pkg_md5ok_dlls, logical(1))
 
-  libpath <- pkg_lib_paths()
+  libpath <- pkg_lib_paths(lib_paths)
   path <- ifelse(is.na(pkgs$loadedpath), pkgs$path, pkgs$loadedpath)
   pkgs$library <- factor(dirname(path), levels = libpath)
 
@@ -87,8 +90,13 @@ pkg_desc <- function(package, lib.loc = NULL) {
   if (inherits(desc, "packageDescription")) desc else NULL
 }
 
-pkg_lib_paths <- function() {
-  normalizePath(.libPaths(), winslash = "/")
+pkg_lib_paths <- function(lib_paths) {
+
+  if (is.null(lib_paths)) {
+    lib_paths <- .libPaths()
+  }
+
+  normalizePath(lib_paths, winslash = "/")
 }
 
 pkg_date <- function (desc) {

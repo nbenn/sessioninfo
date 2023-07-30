@@ -7,7 +7,8 @@
 package_info(
   pkgs = c("loaded", "attached", "installed")[1],
   include_base = FALSE,
-  dependencies = NA
+  dependencies = NA,
+  lib_paths = NULL
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ false since base packages should always match the R version.}
 
 \item{dependencies}{Whether to include the (recursive) dependencies
 as well. See the \code{dependencies} argument of \code{\link[utils:install.packages]{utils::install.packages()}}.}
+
+\item{lib_paths}{Library path(s). The default value \code{NULL} resolved to all
+known library trees (see \code{\link[base:libPaths]{base::.libPaths()}})}
 }
 \value{
 A data frame with columns:

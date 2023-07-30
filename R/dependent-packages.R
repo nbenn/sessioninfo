@@ -1,9 +1,10 @@
 
-dependent_packages <- function(pkgs, dependencies) {
+dependent_packages <- function(pkgs, dependencies, lib_paths = NULL) {
 
   ideps <- interpret_dependencies(dependencies)
 
-  pkgs <- find_deps(pkgs, utils::installed.packages(), ideps[[1]], ideps[[2]])
+  inst <- utils::installed.packages(lib_paths)
+  pkgs <- find_deps(pkgs, inst, ideps[[1]], ideps[[2]])
   desc <- lapply(pkgs, pkg_desc)
 
   loaded_pkgs <- pkgs %in% setdiff(loadedNamespaces(), "base")
